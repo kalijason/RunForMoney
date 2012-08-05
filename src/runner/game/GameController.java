@@ -10,10 +10,18 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import com.onarandombox.MultiverseCore.api.SafeTTeleporter;
+import com.onarandombox.MultiversePortals.MVPortal;
+import com.onarandombox.MultiversePortals.MultiversePortals;
+
 import runner.RunForMoney;
 import runner.event.AttackEvent;
 import runner.util.ChatUtil;
 
+/**
+ * @author Jason
+ * 
+ */
 public class GameController {
 	private final int TPS = 20;
 	private long totalTime = 60 * 2; // 2 mins at default
@@ -153,7 +161,6 @@ public class GameController {
 	}
 
 	public void addRunner(Player player) {
-
 		runnerList.add(new RFMPlayer(player.getName(), PlayerType.RUNNER));
 	}
 
@@ -162,6 +169,9 @@ public class GameController {
 	}
 
 	public void addHunter(Player player) {
+		if (getRunner(player) != null) {
+			removeRunner(player);
+		}
 		hunterList.add(new RFMPlayer(player.getName(), PlayerType.HUNTER));
 	}
 
@@ -183,12 +193,22 @@ public class GameController {
 		return null;
 	}
 
+	public void removeRunner(Player player) {
+		for (RFMPlayer p : runnerList) {
+			if (p.getName().equalsIgnoreCase(player.getName())) {
+				runnerList.remove(p);
+				return;
+			}
+		}
+	}
+
 	public void checkRunterKillsRunner(Player hunter, Player runner) {
 		RFMPlayer rfmRunner = getRunner(runner);
 		RFMPlayer rfmHunter = getHunter(hunter);
 		if (rfmRunner != null && rfmHunter != null && rfmRunner.isAlive()) {
 			rfmRunner.setAlive(false);
 			rfmHunter.addKills();
+			moveToPortal(runner, "observer");
 			ChatUtil.broadcastMultiMessage(ChatColor.LIGHT_PURPLE + "獵人 "
 					+ hunter.getName() + " 抓到了逃亡者  " + runner.getName()
 					+ " ！！！ (存活人數剩" + getRunnerAlive() + " 人)\n" + getTime());
@@ -197,5 +217,18 @@ public class GameController {
 				gameover();
 			}
 		}
+	}
+
+	/**
+	 * after catching player, move him to the jail
+	 * 
+	 * @param player
+	 */
+	public void moveToPortal(Player player, String portalName) {
+		MultiversePortals mvp = this.runForMoney.getMultiversePortals();
+		MVPortal p = mvp.getPortalManager().getPortal(portalName);
+		SafeTTeleporter t = mvp.getCore().getSafeTTeleporter();
+		t.safelyTeleport(player, player, p.getDestination());
+
 	}
 }

@@ -1,12 +1,18 @@
 package runner.command;
 
+import java.util.List;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import com.onarandombox.MultiversePortals.MultiversePortals;
+
+import runner.Constants;
 import runner.game.GameController;
 import runner.util.ChatUtil;
 
@@ -30,26 +36,50 @@ public class RFMCommandExecutor implements CommandExecutor {
 
 		if (args[0].equalsIgnoreCase("addrunner")) {
 			if (isValidArgNumber(args, 2)) {
-				Player other = (Bukkit.getServer().getPlayer(args[1]));
-				if (other == null) {
-					sender.sendMessage(ChatColor.RED + args[1]
-							+ " is not online!");
+				String playerName = args[1];
+				Player player = (Bukkit.getServer().getPlayer(playerName));
+				if (player == null) {
+					sender.sendMessage(ChatColor.RED + playerName + " 目前不在線上!");
+					return false;
+				}
+
+				if (gameController.getRunner(player) != null) {
+					sender.sendMessage(ChatColor.RED + playerName + " 已經在隊伍裡!");
 					return false;
 				}
 				// add runner to game controller
-				gameController.addRunner(other);
+				gameController.addRunner(player);
+				sender.sendMessage(ChatColor.YELLOW + playerName + " 加入成功!");
+				return true;
+			}
+		} else if (args[0].equalsIgnoreCase("addrunnerall")) {
+			if (isValidArgNumber(args, 1)) {
+				World world = sender.getServer().getWorld(
+						Constants.ARENA_WORLDNAME);
+				List<Player> playerList = world.getPlayers();
+
+				for (Player player : playerList) {
+					// add runner to game controller
+					gameController.addRunner(player);
+				}
+
 				return true;
 			}
 		} else if (args[0].equalsIgnoreCase("addhunter")) {
 			if (isValidArgNumber(args, 2)) {
-				Player other = (Bukkit.getServer().getPlayer(args[1]));
-				if (other == null) {
-					sender.sendMessage(ChatColor.RED + args[1]
-							+ " is not online!");
+				String playerName = args[1];
+				Player player = (Bukkit.getServer().getPlayer(playerName));
+				if (player == null) {
+					sender.sendMessage(ChatColor.RED + playerName + " 目前不在線上!");
+					return false;
+				}
+				if (gameController.getHunter(player) != null) {
+					sender.sendMessage(ChatColor.RED + playerName + " 已經在隊伍裡!");
 					return false;
 				}
 				// add runner to game controller
-				gameController.addHunter(other);
+				gameController.addHunter(player);
+				sender.sendMessage(ChatColor.YELLOW + playerName + " 加入成功!");
 				return true;
 			}
 		} else if (args[0].equalsIgnoreCase("start")) {
@@ -82,13 +112,16 @@ public class RFMCommandExecutor implements CommandExecutor {
 		} else if (args[0].equalsIgnoreCase("reset")) {
 			if (isValidArgNumber(args, 1)) {
 				gameController.reset();
+				sender.sendMessage(ChatColor.YELLOW + "遊戲已重置!");
 				return true;
 			}
 		} else if (args[0].equalsIgnoreCase("settime")) {
 			if (isValidArgNumber(args, 2)) {
 				gameController.setTime(Integer.parseInt(args[1]));
+				sender.sendMessage(ChatColor.YELLOW + "時間已設定!");
 				return true;
 			}
+
 		}
 
 		// invalid
