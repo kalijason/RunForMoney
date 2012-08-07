@@ -71,6 +71,9 @@ public class RFMCommandExecutor implements CommandExecutor {
 					gameController.addRunner(player);
 				}
 
+				sender.sendMessage(ChatColor.YELLOW + " 加入了 "
+						+ playerList.size() + " 個玩家!");
+
 				return true;
 			}
 		} else if (args[0].equalsIgnoreCase("addhunter")) {
