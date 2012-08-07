@@ -5,7 +5,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
 public class ChatUtil {
-	static public void broadcastMultiMessage(String message) {
+	static public void broadcast(String message) {
 		if (message != null) {
 			String[] s = message.split("\n");
 			for (String m : s) {
@@ -25,7 +25,7 @@ public class ChatUtil {
 		return sb.toString();
 	}
 
-	static public void sendMultiMessage(CommandSender sender, String message) {
+	static public void sendToSender(CommandSender sender, String message) {
 		if (message != null) {
 			String[] s = message.split("\n");
 			for (String m : s) {

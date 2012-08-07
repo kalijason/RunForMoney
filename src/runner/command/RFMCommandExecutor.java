@@ -107,13 +107,13 @@ public class RFMCommandExecutor implements CommandExecutor {
 			}
 		} else if (args[0].equalsIgnoreCase("status")) {
 			if (isValidArgNumber(args, 1)) {
-				ChatUtil.sendMultiMessage(sender, gameController.getStatus());
+				ChatUtil.sendToSender(sender, gameController.getStatus());
 				return true;
 			}
 
 		} else if (args[0].equalsIgnoreCase("broadcast")) {
 			if (isValidArgNumber(args, 1)) {
-				ChatUtil.broadcastMultiMessage(gameController.getStatus());
+				ChatUtil.broadcast(gameController.getStatus());
 				return true;
 			}
 		} else if (args[0].equalsIgnoreCase("reset")) {

@@ -13,6 +13,7 @@ public class RunForMoney extends JavaPlugin {
 
 	private RFMCommandExecutor myExecutor;
 	private GameController gameController;
+	
 	private MultiversePortals multiversePortals;
 
 	private void checkForMultiVerse() {
@@ -41,11 +42,6 @@ public class RunForMoney extends JavaPlugin {
 		System.out.println("Enable");
 
 		gameController = new GameController(this);
-
-		PluginManager pm = getServer().getPluginManager();
-
-		// Chat Event
-		// pm.registerEvents(new ChatEvent(), this);
 
 		// main command excutor for RFM
 		myExecutor = new RFMCommandExecutor(gameController);
