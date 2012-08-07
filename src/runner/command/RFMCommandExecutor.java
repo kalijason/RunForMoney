@@ -24,6 +24,14 @@ public class RFMCommandExecutor implements CommandExecutor {
 		this.gameController = gameController;
 	}
 
+	private boolean isValidArgNumber(String args[], int number) {
+		if (args.length == number) {
+			return true;
+		}
+		return false;
+
+	}
+
 	@Override
 	public boolean onCommand(CommandSender sender, Command command,
 			String label, String[] args) {
@@ -99,7 +107,6 @@ public class RFMCommandExecutor implements CommandExecutor {
 			}
 		} else if (args[0].equalsIgnoreCase("status")) {
 			if (isValidArgNumber(args, 1)) {
-				// ChatUtil.broadcastMultiMessage(gameController.getStatus());
 				ChatUtil.sendMultiMessage(sender, gameController.getStatus());
 				return true;
 			}
@@ -125,14 +132,6 @@ public class RFMCommandExecutor implements CommandExecutor {
 		}
 
 		// invalid
-		return false;
-
-	}
-
-	private boolean isValidArgNumber(String args[], int number) {
-		if (args.length == number) {
-			return true;
-		}
 		return false;
 
 	}

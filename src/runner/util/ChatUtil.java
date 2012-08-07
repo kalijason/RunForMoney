@@ -5,15 +5,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
 public class ChatUtil {
-	static public void sendMultiMessage(CommandSender sender, String message) {
-		if (message != null) {
-			String[] s = message.split("\n");
-			for (String m : s) {
-				sender.sendMessage("[逃走中] " + m);
-			}
-		}
-	}
-
 	static public void broadcastMultiMessage(String message) {
 		if (message != null) {
 			String[] s = message.split("\n");
@@ -32,6 +23,15 @@ public class ChatUtil {
 		sb.append(min + " 分 " + sec + " 秒");
 		sb.append(ChatColor.RESET);
 		return sb.toString();
+	}
+
+	static public void sendMultiMessage(CommandSender sender, String message) {
+		if (message != null) {
+			String[] s = message.split("\n");
+			for (String m : s) {
+				sender.sendMessage("[逃走中] " + m);
+			}
+		}
 	}
 
 }

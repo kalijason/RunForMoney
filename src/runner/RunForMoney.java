@@ -15,6 +15,21 @@ public class RunForMoney extends JavaPlugin {
 	private GameController gameController;
 	private MultiversePortals multiversePortals;
 
+	private void checkForMultiVerse() {
+
+		if (this.getServer().getPluginManager().getPlugin("Multiverse-Core") != null) {
+			this.multiversePortals = (MultiversePortals) this.getServer()
+					.getPluginManager().getPlugin("Multiverse-Portals");
+			System.out.println("MVC Founded");
+		} else {
+			System.out.println("MVC Not Founded");
+		}
+	}
+
+	public MultiversePortals getMultiversePortals() {
+		return multiversePortals;
+	}
+
 	@Override
 	public void onDisable() {
 
@@ -38,20 +53,5 @@ public class RunForMoney extends JavaPlugin {
 		getCommand("rfm").setExecutor(myExecutor);
 
 		checkForMultiVerse();
-	}
-
-	public MultiversePortals getMultiversePortals() {
-		return multiversePortals;
-	}
-
-	private void checkForMultiVerse() {
-
-		if (this.getServer().getPluginManager().getPlugin("Multiverse-Core") != null) {
-			this.multiversePortals = (MultiversePortals) this.getServer()
-					.getPluginManager().getPlugin("Multiverse-Portals");
-			System.out.println("MVC Founded");
-		} else {
-			System.out.println("MVC Not Founded");
-		}
 	}
 }

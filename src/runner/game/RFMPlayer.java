@@ -6,22 +6,6 @@ public class RFMPlayer {
 	private boolean isAlive;
 	private int kills;
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public int getType() {
-		return type;
-	}
-
-	public void setType(int type) {
-		this.type = type;
-	}
-
 	public RFMPlayer(String name, int type) {
 		super();
 		this.name = name;
@@ -30,8 +14,20 @@ public class RFMPlayer {
 		kills = 0;
 	}
 
+	public void addKills() {
+		kills++;
+	}
+
 	public int getKills() {
 		return kills;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public int getType() {
+		return type;
 	}
 
 	public boolean isAlive() {
@@ -42,7 +38,11 @@ public class RFMPlayer {
 		this.isAlive = isAlive;
 	}
 
-	public void addKills() {
-		kills++;
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setType(int type) {
+		this.type = type;
 	}
 }

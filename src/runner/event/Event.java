@@ -9,9 +9,14 @@ import org.bukkit.event.block.BlockBreakEvent;
 
 public class Event implements Listener {
 
-	@EventHandler(priority = EventPriority.LOW)
-	public void onPlayerJoin(final PlayerJoinEvent event) {
-
+	@EventHandler
+	public void blockBreak(BlockBreakEvent event) {
+		String playername = event.getPlayer().getDisplayName();
+		String blockname = event.getBlock().getType().name();
+		event.getPlayer()
+				.getServer()
+				.broadcastMessage(
+						"player " + playername + " just break " + blockname);
 	}
 
 	@EventHandler
@@ -23,13 +28,8 @@ public class Event implements Listener {
 								+ " just login.");
 	}
 
-	@EventHandler
-	public void blockBreak(BlockBreakEvent event) {
-		String playername = event.getPlayer().getDisplayName();
-		String blockname = event.getBlock().getType().name();
-		event.getPlayer()
-				.getServer()
-				.broadcastMessage(
-						"player " + playername + " just break " + blockname);
+	@EventHandler(priority = EventPriority.LOW)
+	public void onPlayerJoin(final PlayerJoinEvent event) {
+
 	}
 }
