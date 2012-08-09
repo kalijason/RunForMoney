@@ -241,6 +241,27 @@ public class GameController {
 		}
 	}
 
+	public void beginStatus() {
+		ChatUtil.broadcast(ChatColor.GOLD + "遊戲初期，全場獵人速度減緩30秒！！！");
+		for (RFMPlayer p : hunterList) {
+			Player hunter = (Bukkit.getServer().getPlayer(p.getName()));
+			if (hunter != null) {
+				hunter.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,
+						30 * TPS, 1));
+			}
+		}
+
+		// set time out
+		runForMoney.getServer().getScheduler()
+				.scheduleSyncDelayedTask(runForMoney, new Runnable() {
+					public void run() {
+						ChatUtil.broadcast(ChatColor.GOLD
+								+ "全場獵人速度回復！！！");
+
+					}
+				}, 30 * TPS);
+	}
+
 	public void removeRunner(Player player) {
 		for (RFMPlayer p : runnerList) {
 			if (p.getName().equalsIgnoreCase(player.getName())) {
@@ -295,6 +316,8 @@ public class GameController {
 						stop();
 					}
 				}, totalTime * TPS);
+
+		beginStatus();
 	}
 
 	public boolean isStarted() {
