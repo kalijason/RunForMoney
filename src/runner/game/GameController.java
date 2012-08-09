@@ -64,15 +64,16 @@ public class GameController {
 					+ " ！！！ (存活人數剩" + getRunnerAlive() + " 人)\n" + getTime());
 			if (getRunnerAlive() <= 0) {
 				ChatUtil.broadcast(ChatColor.RED + "所有逃亡者皆被補獲！！！");
-				gameover();
+				stop();
 			}
 		}
 	}
 
-	public void gameover() {
+	public void stop() {
 		ChatUtil.broadcast("遊戲結束！！！");
 		EntityDamageByEntityEvent.getHandlerList().unregister(runForMoney);
 		PlayerCommandPreprocessEvent.getHandlerList().unregister(runForMoney);
+		runForMoney.getServer().getScheduler().cancelTasks(runForMoney);
 		isStarted = false;
 
 		prizeDispatcher.dispatchToRunners(runnerList);
@@ -202,7 +203,7 @@ public class GameController {
 
 	public void reset() {
 		if (isStarted) {
-			gameover();
+			stop();
 		}
 		EntityDamageByEntityEvent.getHandlerList().unregister(runForMoney);
 		runnerList.clear();
@@ -226,7 +227,7 @@ public class GameController {
 		isStarted = true;
 		startTime = System.currentTimeMillis();
 
-		// show status after
+		// show status after 3 secs
 		runForMoney.getServer().getScheduler()
 				.scheduleSyncDelayedTask(runForMoney, new Runnable() {
 					public void run() {
@@ -239,8 +240,12 @@ public class GameController {
 				.scheduleSyncDelayedTask(runForMoney, new Runnable() {
 					public void run() {
 						ChatUtil.broadcast(getStatus());
-						gameover();
+						stop();
 					}
 				}, totalTime * TPS);
+	}
+
+	public boolean isStarted() {
+		return isStarted;
 	}
 }

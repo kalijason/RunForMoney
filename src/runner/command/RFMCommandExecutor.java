@@ -95,7 +95,13 @@ public class RFMCommandExecutor implements CommandExecutor {
 			}
 		} else if (args[0].equalsIgnoreCase("start")) {
 			if (isValidArgNumber(args, 1)) {
-				gameController.start();
+				if (gameController.isStarted()) {
+					sender.sendMessage(ChatColor.YELLOW
+							+ "遊戲正在進行中，欲重新開始遊戲請先輸入 /stop 停止遊戲!");
+				} else {
+					gameController.start();
+				}
+
 				return true;
 			}
 		} else if (args[0].equalsIgnoreCase("quest")) {
@@ -105,7 +111,13 @@ public class RFMCommandExecutor implements CommandExecutor {
 			}
 		} else if (args[0].equalsIgnoreCase("stop")) {
 			if (isValidArgNumber(args, 1)) {
-				gameController.gameover();
+
+				if (!gameController.isStarted()) {
+					sender.sendMessage(ChatColor.YELLOW + "沒有遊戲正在進行中!");
+				} else {
+					gameController.stop();
+				}
+
 				return true;
 			}
 		} else if (args[0].equalsIgnoreCase("status")) {
