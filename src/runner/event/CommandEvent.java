@@ -19,14 +19,18 @@ public class CommandEvent implements Listener {
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onCommand(PlayerCommandPreprocessEvent event) {
+
 		Player player = event.getPlayer();
 		if (player != null
 				&& player instanceof Player
 				&& ((gameController.getRunner(player) != null) || gameController
 						.getHunter(player) != null)) {
 			if (!player.hasPermission("runformoney.admin")) {
-				event.setCancelled(true);
-				player.sendMessage(ChatColor.BLUE + "遊戲中不可以使用指令");
+				if (event.getMessage().toLowerCase().indexOf("/login") != -1) {
+					event.setCancelled(true);
+					player.sendMessage(ChatColor.BLUE + "遊戲中不可以使用指令");
+				}
+
 			}
 
 		}

@@ -8,6 +8,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -18,6 +19,7 @@ import com.onarandombox.MultiversePortals.MultiversePortals;
 import runner.RunForMoney;
 import runner.event.AttackEvent;
 import runner.event.CommandEvent;
+import runner.event.QuitEvent;
 import runner.util.ChatUtil;
 
 /**
@@ -62,10 +64,19 @@ public class GameController {
 			ChatUtil.broadcast(ChatColor.LIGHT_PURPLE + "獵人 "
 					+ hunter.getName() + " 抓到了逃亡者  " + runner.getName()
 					+ " ！！！ (存活人數剩" + getRunnerAlive() + " 人)\n" + getTime());
-			if (getRunnerAlive() <= 0) {
-				ChatUtil.broadcast(ChatColor.RED + "所有逃亡者皆被補獲！！！");
-				stop();
-			}
+			checkIfGameover();
+		}
+	}
+
+	public void checkIfGameover() {
+		if (getRunnerAlive() <= 0) {
+			ChatUtil.broadcast(ChatColor.RED + "所有逃亡者皆被補獲！！！");
+			stop();
+		}
+
+		if (getHunterAlive() <= 0) {
+			ChatUtil.broadcast(ChatColor.RED + "所有獵人放棄遊戲！！！");
+			stop();
 		}
 	}
 
@@ -73,12 +84,33 @@ public class GameController {
 		ChatUtil.broadcast("遊戲結束！！！");
 		EntityDamageByEntityEvent.getHandlerList().unregister(runForMoney);
 		PlayerCommandPreprocessEvent.getHandlerList().unregister(runForMoney);
+		PlayerQuitEvent.getHandlerList().unregister(runForMoney);
+
 		runForMoney.getServer().getScheduler().cancelTasks(runForMoney);
 		isStarted = false;
 
 		prizeDispatcher.dispatchToRunners(runnerList);
 		prizeDispatcher.dispatchToHunters(hunterList);
 		ChatUtil.broadcast("獎品發送結束！！！");
+	}
+
+	public void checkPlayerQuit(Player player) {
+		RFMPlayer rfmPlayer = getHunter(player);
+		if (rfmPlayer == null)
+			rfmPlayer = getRunner(player);
+		if (rfmPlayer != null) {
+			String type = null;
+			if (rfmPlayer.getType() == PlayerType.HUNTER) {
+				type = "獵人";
+			} else {
+				type = "逃亡者";
+			}
+			rfmPlayer.setAlive(false);
+			ChatUtil.broadcast(ChatColor.AQUA + rfmPlayer.getName() + "("
+					+ type + ")" + " 放棄了遊戲!" + ChatColor.RESET);
+			checkIfGameover();
+
+		}
 	}
 
 	public RFMPlayer getHunter(Player player) {
@@ -113,6 +145,16 @@ public class GameController {
 		return alives;
 	}
 
+	public int getHunterAlive() {
+		int alives = 0;
+		for (RFMPlayer p : hunterList) {
+			if (p.isAlive()) {
+				alives++;
+			}
+		}
+		return alives;
+	}
+
 	public List<RFMPlayer> getRunnerList() {
 		return runnerList;
 	}
@@ -125,13 +167,13 @@ public class GameController {
 				+ "人/存活人數" + getRunnerAlive() + ") ");
 
 		for (RFMPlayer p : runnerList) {
+			ChatColor color = ChatColor.RESET;
 			if (p.isAlive()) {
-				statusString.append(ChatColor.AQUA + p.getName()
-						+ ChatColor.RESET + ", ");
+				color = ChatColor.AQUA;
 			} else {
-				statusString.append(ChatColor.GRAY + p.getName()
-						+ ChatColor.RESET + ", ");
+				color = ChatColor.GRAY;
 			}
+			statusString.append(color + p.getName() + ChatColor.RESET + ", ");
 		}
 
 		statusString.append("\n");
@@ -142,7 +184,14 @@ public class GameController {
 				+ "人) ");
 
 		for (RFMPlayer p : hunterList) {
-			statusString.append(p.getName() + "(" + p.getKills() + ") ");
+			ChatColor color = ChatColor.RESET;
+			if (p.isAlive()) {
+				color = ChatColor.AQUA;
+			} else {
+				color = ChatColor.GRAY;
+			}
+			statusString.append(color + p.getName() + "(" + p.getKills() + ") "
+					+ ChatColor.RESET + ", ");
 		}
 
 		statusString.append("\n");
@@ -219,11 +268,14 @@ public class GameController {
 
 		ChatUtil.broadcast(ChatColor.GOLD + "==全員逃走中遊戲正式開始，死命逃吧！！！==");
 		Bukkit.getPluginManager().registerEvents(new AttackEvent(this),
+				runForMoney);
 
-		runForMoney);
 		Bukkit.getPluginManager().registerEvents(new CommandEvent(this),
+				runForMoney);
 
-		runForMoney);
+		Bukkit.getPluginManager().registerEvents(new QuitEvent(this),
+				runForMoney);
+
 		isStarted = true;
 		startTime = System.currentTimeMillis();
 

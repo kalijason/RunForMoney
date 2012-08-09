@@ -17,7 +17,7 @@ public class PrizeDispatcher {
 	public void dispatchToHunters(List<RFMPlayer> hunterList) {
 		// 抓到玩家大於一人則有一個獎品，再來每抓三人就有一個獎品
 		for (RFMPlayer p : hunterList) {
-			if (p.getKills() > 0) {
+			if (p.getKills() > 0 && p.isAlive()) {
 				givePrize(p, 1, (p.getKills() / 3) + 1);
 			}
 
