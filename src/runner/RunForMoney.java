@@ -2,6 +2,7 @@ package runner;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
+import runner.command.JoinCommandExecutor;
 import runner.command.RFMCommandExecutor;
 import runner.game.GameController;
 import runner.game.Teleporter;
@@ -9,6 +10,7 @@ import runner.game.Teleporter;
 public class RunForMoney extends JavaPlugin {
 
 	private RFMCommandExecutor myExecutor;
+	private JoinCommandExecutor joinExecutor;
 	private GameController gameController;
 
 	private Teleporter teleporter;
@@ -29,10 +31,13 @@ public class RunForMoney extends JavaPlugin {
 
 		gameController = new GameController(this);
 
-		// main command excutor for RFM
+		// main command executor for RFM
 		myExecutor = new RFMCommandExecutor(gameController);
-
 		getCommand("rfm").setExecutor(myExecutor);
+
+		// join command
+		joinExecutor = new JoinCommandExecutor(gameController);
+		getCommand("join").setExecutor(joinExecutor);
 
 		teleporter = new Teleporter(this);
 

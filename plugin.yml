@@ -1,5 +1,5 @@
 name: RunForMoney
-version: 1.0.2
+version: 1.0.3
 main: runner.RunForMoney
 
 commands:
@@ -7,4 +7,9 @@ commands:
       description: Administration command of Run For Money
       usage: /<command> addhunter, addrunner,  status, start, stop, reset
       permission: runformoney.admin
+      permission-message: You don't have <permission>
+   join:
+      description: Join command of Run For Money
+      usage: /<command>
+      permission:
       permission-message: You don't have <permission>

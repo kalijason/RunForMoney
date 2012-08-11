@@ -6,7 +6,6 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -111,7 +110,10 @@ public class GameController {
 		if (rfmRunner != null && rfmHunter != null && rfmRunner.isAlive()) {
 			rfmRunner.setAlive(false);
 			rfmHunter.addKills();
+
+			// teleport to observer portal
 			runForMoney.getTeleporter().moveToPortal(runner, "observer");
+
 			ChatUtil.broadcast(ChatColor.LIGHT_PURPLE + "獵人 "
 					+ hunter.getName() + " 抓到了逃亡者  " + runner.getName()
 					+ " ！！！ (存活人數剩" + getRunnerAlive() + " 人)\n" + getTime());
@@ -140,6 +142,18 @@ public class GameController {
 
 	public List<RFMPlayer> getHunterList() {
 		return hunterList;
+	}
+
+	public boolean join(Player player) {
+		if (getRunner(player) == null && getHunter(player) == null) {
+			addRunner(player);
+			// teleport to observer portal
+			runForMoney.getTeleporter().moveToPortal(player, "rungate2");
+
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public RFMPlayer getRunner(Player player) {
@@ -208,6 +222,15 @@ public class GameController {
 		return statusString.toString();
 	}
 
+	public void playerLeave(RFMPlayer rfmPlayer) {
+		Player player = getPlayer(rfmPlayer);
+		if (player != null) {
+			removeHunter(player);
+			removeHunter(player);
+			runForMoney.getTeleporter().moveToPortal(player, "arena2world");
+		}
+	}
+
 	public String getTime() {
 		StringBuffer statusString = new StringBuffer();
 		if (isStarted) {
@@ -242,6 +265,15 @@ public class GameController {
 		for (RFMPlayer p : runnerList) {
 			if (p.getName().equalsIgnoreCase(player.getName())) {
 				runnerList.remove(p);
+				return;
+			}
+		}
+	}
+
+	public void removeHunter(Player player) {
+		for (RFMPlayer p : hunterList) {
+			if (p.getName().equalsIgnoreCase(player.getName())) {
+				hunterList.remove(p);
 				return;
 			}
 		}
@@ -307,8 +339,42 @@ public class GameController {
 		runForMoney.getServer().getScheduler().cancelTasks(runForMoney);
 		isStarted = false;
 
+		// dispatch Prize to players
+		disPatchPrize();
+
+		// teleport all players out of arena
+		teleportAllPlayerOut();
+
+	}
+
+	private void disPatchPrize() {
+
 		prizeDispatcher.dispatchToRunners(runnerList);
 		prizeDispatcher.dispatchToHunters(hunterList);
 		ChatUtil.broadcast("獎品發送結束！！！");
+	}
+
+	private Player getPlayer(RFMPlayer rfmPlayer) {
+		Player player = runForMoney.getServer().getPlayer(rfmPlayer.getName());
+		return player;
+	}
+
+	public void teleportAllPlayerOut() {
+		ChatUtil.broadcast("3秒後傳送玩家！！！");
+		runForMoney.getServer().getScheduler()
+				.scheduleSyncDelayedTask(runForMoney, new Runnable() {
+
+					@Override
+					public void run() {
+						for (RFMPlayer rfmPlayer : runnerList) {
+							playerLeave(rfmPlayer);
+						}
+						for (RFMPlayer rfmPlayer : hunterList) {
+							playerLeave(rfmPlayer);
+						}
+						ChatUtil.broadcast("玩家傳送結束！！！");
+					}
+				}, 3 * TPS);
+
 	}
 }
