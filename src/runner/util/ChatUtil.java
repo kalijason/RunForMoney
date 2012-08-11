@@ -3,6 +3,7 @@ package runner.util;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 public class ChatUtil {
 	static public void broadcast(String message) {
@@ -30,6 +31,15 @@ public class ChatUtil {
 			String[] s = message.split("\n");
 			for (String m : s) {
 				sender.sendMessage("[逃走中] " + m);
+			}
+		}
+	}
+
+	static public void sendToSender(Player player, String message) {
+		if (message != null && player != null) {
+			String[] s = message.split("\n");
+			for (String m : s) {
+				player.sendMessage("[逃走中] " + m);
 			}
 		}
 	}

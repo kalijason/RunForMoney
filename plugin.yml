@@ -5,7 +5,7 @@ main: runner.RunForMoney
 commands:
    rfm:
       description: Administration command of Run For Money
-      usage: /<command> addhunter, addrunner,  status, start, stop, reset
+      usage: /<command> hunter <id>, start, stop, wait
       permission: runformoney.admin
       permission-message: You don't have <permission>
    join:

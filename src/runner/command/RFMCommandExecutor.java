@@ -1,19 +1,15 @@
 package runner.command;
 
-import java.util.List;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import runner.Constants;
 import runner.game.GameController;
+import runner.game.GameController.GameStatus;
 import runner.util.ChatUtil;
-import runner.util.PlayerUtil;
 
 public class RFMCommandExecutor implements CommandExecutor {
 
@@ -41,7 +37,7 @@ public class RFMCommandExecutor implements CommandExecutor {
 			return false;
 		}
 
-		if (args[0].equalsIgnoreCase("addrunner")) {
+		if (args[0].equalsIgnoreCase("runner")) {
 			if (isValidArgNumber(args, 2)) {
 				String playerName = args[1];
 				Player player = (Bukkit.getServer().getPlayer(playerName));
@@ -56,26 +52,10 @@ public class RFMCommandExecutor implements CommandExecutor {
 				}
 				// add runner to game controller
 				gameController.addRunner(player);
-				sender.sendMessage(ChatColor.YELLOW + playerName + " 加入成功!");
+				sender.sendMessage(ChatColor.YELLOW + playerName + " 加入逃亡者成功!");
 				return true;
 			}
-		} else if (args[0].equalsIgnoreCase("addrunnerall")) {
-			if (isValidArgNumber(args, 1)) {
-				World world = sender.getServer().getWorld(
-						Constants.ARENA_WORLDNAME);
-				List<Player> playerList = world.getPlayers();
-
-				for (Player player : playerList) {
-					// add runner to game controller
-					gameController.addRunner(player);
-				}
-
-				sender.sendMessage(ChatColor.YELLOW + " 加入了 "
-						+ playerList.size() + " 個玩家!");
-
-				return true;
-			}
-		} else if (args[0].equalsIgnoreCase("addhunter")) {
+		} else if (args[0].equalsIgnoreCase("hunter")) {
 			if (isValidArgNumber(args, 2)) {
 				String playerName = args[1];
 				Player player = (Bukkit.getServer().getPlayer(playerName));
@@ -84,34 +64,41 @@ public class RFMCommandExecutor implements CommandExecutor {
 					return false;
 				}
 				if (gameController.getHunter(player) != null) {
-					sender.sendMessage(ChatColor.RED + playerName + " 已經在隊伍裡!");
+					sender.sendMessage(ChatColor.RED + playerName + " 已經在獵人隊伍裡!");
 					return false;
 				}
 				// add runner to game controller
 				gameController.addHunter(player);
-				sender.sendMessage(ChatColor.YELLOW + playerName + " 加入成功!");
+				sender.sendMessage(ChatColor.YELLOW + playerName + " 加入獵人成功!");
 				return true;
 			}
 		} else if (args[0].equalsIgnoreCase("start")) {
 			if (isValidArgNumber(args, 1)) {
-				if (gameController.isStarted()) {
+				if (gameController.getGameStatus() == GameStatus.Running) {
 					sender.sendMessage(ChatColor.YELLOW
-							+ "遊戲正在進行中，欲重新開始遊戲請先輸入 /stop 停止遊戲!");
+							+ "遊戲正在進行中，欲重新開始遊戲請先輸入 /rfm stop 停止遊戲!");
+				} else if (gameController.getGameStatus() == GameStatus.Standy) {
+					sender.sendMessage(ChatColor.YELLOW
+							+ "遊戲尚未建立，請先輸入 /rfm wait 來招攬玩家!");
 				} else {
-					gameController.start();
+					if (gameController.getRunnerList().size() == 0) {
+						sender.sendMessage(ChatColor.YELLOW
+								+ "尚無逃亡者，請先輸入 /rfm wait 來招攬玩家!");
+					} else if (gameController.getHunterList().size() == 0) {
+						sender.sendMessage(ChatColor.YELLOW
+								+ "尚無獵人，請先輸入 /rfm hunter id 來手動設定獵人!");
+					} else {
+						gameController.start();
+					}
+
 				}
 
-				return true;
-			}
-		} else if (args[0].equalsIgnoreCase("quest")) {
-			if (isValidArgNumber(args, 1)) {
-				gameController.quest();
 				return true;
 			}
 		} else if (args[0].equalsIgnoreCase("stop")) {
 			if (isValidArgNumber(args, 1)) {
 
-				if (!gameController.isStarted()) {
+				if (gameController.getGameStatus() == GameStatus.Standy) {
 					sender.sendMessage(ChatColor.YELLOW + "沒有遊戲正在進行中!");
 				} else {
 					gameController.stop();
@@ -143,17 +130,26 @@ public class RFMCommandExecutor implements CommandExecutor {
 				return true;
 			}
 
-		} else if (args[0].equalsIgnoreCase("test")) {
+		} else if (args[0].equalsIgnoreCase("wait")) {
 			if (isValidArgNumber(args, 1)) {
-
-				Player player = (Bukkit.getServer().getPlayer(sender.getName()));
-				if (player != null) {
-					PlayerUtil.setAir(player);
-					return true;
+				if (gameController.getGameStatus() != GameStatus.Standy) {
+					sender.sendMessage(ChatColor.YELLOW + "遊戲正在進行或已在等待中!");
+				} else {
+					gameController.reset();
+					gameController.setGameStatus(GameStatus.Waiting);
+					ChatUtil.broadcast(ChatColor.YELLOW
+							+ "全員逃走中即將開始，欲參加的玩家請輸入/join加入遊戲!");
+					ChatUtil.sendToSender(
+							sender,
+							ChatColor.AQUA
+									+ "當玩家開始加入後，請輸入/rfm status來觀看逃亡者玩家\n使用/rfm hunter id 來手動挑選獵人");
 				}
 
+				return true;
 			}
 
+		} else if (args[0].equalsIgnoreCase("test")) {
+			return true;
 		}
 
 		// invalid

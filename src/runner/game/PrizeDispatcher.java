@@ -27,7 +27,9 @@ public class PrizeDispatcher {
 	public void dispatchToRunners(List<RFMPlayer> runnerList) {
 		for (RFMPlayer p : runnerList) {
 			if (p.isAlive()) {
-				givePrize(p, 1, 2);
+				givePrize(p, 1, 3);
+			}else{
+				givePrize(p, 1, 1);
 			}
 		}
 	}
