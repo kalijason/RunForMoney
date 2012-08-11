@@ -7,14 +7,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-
-import com.onarandombox.MultiverseCore.api.SafeTTeleporter;
-import com.onarandombox.MultiversePortals.MVPortal;
-import com.onarandombox.MultiversePortals.MultiversePortals;
 
 import runner.RunForMoney;
 import runner.event.AttackEvent;
@@ -35,12 +32,14 @@ public class GameController {
 	private List<RFMPlayer> hunterList;
 	RunForMoney runForMoney;
 	private PrizeDispatcher prizeDispatcher;
+	private InventoryManager invManager;
 
 	public GameController(RunForMoney runForMoney) {
 		runnerList = new ArrayList<RFMPlayer>();
 		hunterList = new ArrayList<RFMPlayer>();
 		this.runForMoney = runForMoney;
 		this.prizeDispatcher = new PrizeDispatcher(runForMoney);
+		this.invManager = new InventoryManager(this);
 	}
 
 	public void addHunter(Player player) {
@@ -54,18 +53,25 @@ public class GameController {
 		runnerList.add(new RFMPlayer(player.getName(), PlayerType.RUNNER));
 	}
 
-	public void checkRunterKillsRunner(Player hunter, Player runner) {
-		RFMPlayer rfmRunner = getRunner(runner);
-		RFMPlayer rfmHunter = getHunter(hunter);
-		if (rfmRunner != null && rfmHunter != null && rfmRunner.isAlive()) {
-			rfmRunner.setAlive(false);
-			rfmHunter.addKills();
-			moveToPortal(runner, "observer");
-			ChatUtil.broadcast(ChatColor.LIGHT_PURPLE + "獵人 "
-					+ hunter.getName() + " 抓到了逃亡者  " + runner.getName()
-					+ " ！！！ (存活人數剩" + getRunnerAlive() + " 人)\n" + getTime());
-			checkIfGameover();
+	public void beginStatus() {
+		ChatUtil.broadcast(ChatColor.GOLD + "遊戲初期，全場獵人速度減緩30秒！！！");
+		for (RFMPlayer p : hunterList) {
+			Player hunter = (Bukkit.getServer().getPlayer(p.getName()));
+			if (hunter != null) {
+				hunter.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,
+						30 * TPS, 1));
+			}
 		}
+
+		// set time out
+		runForMoney.getServer().getScheduler()
+				.scheduleSyncDelayedTask(runForMoney, new Runnable() {
+					@Override
+					public void run() {
+						ChatUtil.broadcast(ChatColor.GOLD + "全場獵人速度回復！！！");
+
+					}
+				}, 30 * TPS);
 	}
 
 	public void checkIfGameover() {
@@ -78,20 +84,6 @@ public class GameController {
 			ChatUtil.broadcast(ChatColor.RED + "所有獵人放棄遊戲！！！");
 			stop();
 		}
-	}
-
-	public void stop() {
-		ChatUtil.broadcast("遊戲結束！！！");
-		EntityDamageByEntityEvent.getHandlerList().unregister(runForMoney);
-		PlayerCommandPreprocessEvent.getHandlerList().unregister(runForMoney);
-		PlayerQuitEvent.getHandlerList().unregister(runForMoney);
-
-		runForMoney.getServer().getScheduler().cancelTasks(runForMoney);
-		isStarted = false;
-
-		prizeDispatcher.dispatchToRunners(runnerList);
-		prizeDispatcher.dispatchToHunters(hunterList);
-		ChatUtil.broadcast("獎品發送結束！！！");
 	}
 
 	public void checkPlayerQuit(Player player) {
@@ -113,6 +105,20 @@ public class GameController {
 		}
 	}
 
+	public void checkRunterKillsRunner(Player hunter, Player runner) {
+		RFMPlayer rfmRunner = getRunner(runner);
+		RFMPlayer rfmHunter = getHunter(hunter);
+		if (rfmRunner != null && rfmHunter != null && rfmRunner.isAlive()) {
+			rfmRunner.setAlive(false);
+			rfmHunter.addKills();
+			runForMoney.getTeleporter().moveToPortal(runner, "observer");
+			ChatUtil.broadcast(ChatColor.LIGHT_PURPLE + "獵人 "
+					+ hunter.getName() + " 抓到了逃亡者  " + runner.getName()
+					+ " ！！！ (存活人數剩" + getRunnerAlive() + " 人)\n" + getTime());
+			checkIfGameover();
+		}
+	}
+
 	public RFMPlayer getHunter(Player player) {
 		for (RFMPlayer p : hunterList) {
 			if (p.getName().equalsIgnoreCase(player.getName())) {
@@ -120,6 +126,16 @@ public class GameController {
 			}
 		}
 		return null;
+	}
+
+	public int getHunterAlive() {
+		int alives = 0;
+		for (RFMPlayer p : hunterList) {
+			if (p.isAlive()) {
+				alives++;
+			}
+		}
+		return alives;
 	}
 
 	public List<RFMPlayer> getHunterList() {
@@ -138,16 +154,6 @@ public class GameController {
 	public int getRunnerAlive() {
 		int alives = 0;
 		for (RFMPlayer p : runnerList) {
-			if (p.isAlive()) {
-				alives++;
-			}
-		}
-		return alives;
-	}
-
-	public int getHunterAlive() {
-		int alives = 0;
-		for (RFMPlayer p : hunterList) {
 			if (p.isAlive()) {
 				alives++;
 			}
@@ -217,17 +223,8 @@ public class GameController {
 		return statusString.toString();
 	}
 
-	/**
-	 * after catching player, move him to the jail
-	 * 
-	 * @param player
-	 */
-	public void moveToPortal(Player player, String portalName) {
-		MultiversePortals mvp = this.runForMoney.getMultiversePortals();
-		MVPortal p = mvp.getPortalManager().getPortal(portalName);
-		SafeTTeleporter t = mvp.getCore().getSafeTTeleporter();
-		t.safelyTeleport(player, player, p.getDestination());
-
+	public boolean isStarted() {
+		return isStarted;
 	}
 
 	public void quest() {
@@ -239,27 +236,6 @@ public class GameController {
 						30 * TPS, 1));
 			}
 		}
-	}
-
-	public void beginStatus() {
-		ChatUtil.broadcast(ChatColor.GOLD + "遊戲初期，全場獵人速度減緩30秒！！！");
-		for (RFMPlayer p : hunterList) {
-			Player hunter = (Bukkit.getServer().getPlayer(p.getName()));
-			if (hunter != null) {
-				hunter.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,
-						30 * TPS, 1));
-			}
-		}
-
-		// set time out
-		runForMoney.getServer().getScheduler()
-				.scheduleSyncDelayedTask(runForMoney, new Runnable() {
-					public void run() {
-						ChatUtil.broadcast(ChatColor.GOLD
-								+ "全場獵人速度回復！！！");
-
-					}
-				}, 30 * TPS);
 	}
 
 	public void removeRunner(Player player) {
@@ -275,7 +251,7 @@ public class GameController {
 		if (isStarted) {
 			stop();
 		}
-		EntityDamageByEntityEvent.getHandlerList().unregister(runForMoney);
+		EntityDamageEvent.getHandlerList().unregister(runForMoney);
 		runnerList.clear();
 		hunterList.clear();
 	}
@@ -303,6 +279,7 @@ public class GameController {
 		// show status after 3 secs
 		runForMoney.getServer().getScheduler()
 				.scheduleSyncDelayedTask(runForMoney, new Runnable() {
+					@Override
 					public void run() {
 						ChatUtil.broadcast(getStatus());
 					}
@@ -311,6 +288,7 @@ public class GameController {
 		// set time out
 		runForMoney.getServer().getScheduler()
 				.scheduleSyncDelayedTask(runForMoney, new Runnable() {
+					@Override
 					public void run() {
 						ChatUtil.broadcast(getStatus());
 						stop();
@@ -320,7 +298,17 @@ public class GameController {
 		beginStatus();
 	}
 
-	public boolean isStarted() {
-		return isStarted;
+	public void stop() {
+		ChatUtil.broadcast("遊戲結束！！！");
+		EntityDamageEvent.getHandlerList().unregister(runForMoney);
+		PlayerCommandPreprocessEvent.getHandlerList().unregister(runForMoney);
+		PlayerQuitEvent.getHandlerList().unregister(runForMoney);
+
+		runForMoney.getServer().getScheduler().cancelTasks(runForMoney);
+		isStarted = false;
+
+		prizeDispatcher.dispatchToRunners(runnerList);
+		prizeDispatcher.dispatchToHunters(hunterList);
+		ChatUtil.broadcast("獎品發送結束！！！");
 	}
 }

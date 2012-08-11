@@ -1,34 +1,20 @@
 package runner;
 
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import com.onarandombox.MultiverseCore.MultiverseCore;
-import com.onarandombox.MultiversePortals.MultiversePortals;
 
 import runner.command.RFMCommandExecutor;
 import runner.game.GameController;
+import runner.game.Teleporter;
 
 public class RunForMoney extends JavaPlugin {
 
 	private RFMCommandExecutor myExecutor;
 	private GameController gameController;
-	
-	private MultiversePortals multiversePortals;
 
-	private void checkForMultiVerse() {
+	private Teleporter teleporter;
 
-		if (this.getServer().getPluginManager().getPlugin("Multiverse-Core") != null) {
-			this.multiversePortals = (MultiversePortals) this.getServer()
-					.getPluginManager().getPlugin("Multiverse-Portals");
-			System.out.println("MVC Founded");
-		} else {
-			System.out.println("MVC Not Founded");
-		}
-	}
-
-	public MultiversePortals getMultiversePortals() {
-		return multiversePortals;
+	public Teleporter getTeleporter() {
+		return teleporter;
 	}
 
 	@Override
@@ -48,6 +34,7 @@ public class RunForMoney extends JavaPlugin {
 
 		getCommand("rfm").setExecutor(myExecutor);
 
-		checkForMultiVerse();
+		teleporter = new Teleporter(this);
+
 	}
 }

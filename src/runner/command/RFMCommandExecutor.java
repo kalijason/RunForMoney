@@ -10,11 +10,10 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.onarandombox.MultiversePortals.MultiversePortals;
-
 import runner.Constants;
 import runner.game.GameController;
 import runner.util.ChatUtil;
+import runner.util.PlayerUtil;
 
 public class RFMCommandExecutor implements CommandExecutor {
 
@@ -142,6 +141,17 @@ public class RFMCommandExecutor implements CommandExecutor {
 				gameController.setTime(Integer.parseInt(args[1]));
 				sender.sendMessage(ChatColor.YELLOW + "時間已設定!");
 				return true;
+			}
+
+		} else if (args[0].equalsIgnoreCase("test")) {
+			if (isValidArgNumber(args, 1)) {
+
+				Player player = (Bukkit.getServer().getPlayer(sender.getName()));
+				if (player != null) {
+					PlayerUtil.setAir(player);
+					return true;
+				}
+
 			}
 
 		}
