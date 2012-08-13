@@ -37,7 +37,24 @@ public class RFMCommandExecutor implements CommandExecutor {
 			return false;
 		}
 
-		if (args[0].equalsIgnoreCase("runner")) {
+		if (args[0].equalsIgnoreCase("help")) {
+			if (isValidArgNumber(args, 1)) {
+				sender.sendMessage(ChatColor.AQUA + "/rfm wait - 開創遊戲招收玩家");
+				sender.sendMessage(ChatColor.AQUA
+						+ "/rfm settime 600 - 設定遊戲時間，單位為秒，600即為10分鐘");
+				sender.sendMessage(ChatColor.AQUA
+						+ "/rfm hunter <id> - 設定玩家為獵人");
+				sender.sendMessage(ChatColor.AQUA
+						+ "/rfm status - 觀看目前遊戲狀態(只有你看得到)");
+				sender.sendMessage(ChatColor.AQUA
+						+ "/rfm broadcast - 廣撥目前遊戲狀態");
+				sender.sendMessage(ChatColor.AQUA
+						+ "/rfm start - 遊戲開始");
+				sender.sendMessage(ChatColor.AQUA
+						+ "/rfm stop - 遊戲強制結束");
+				return true;
+			}
+		} else if (args[0].equalsIgnoreCase("runner")) {
 			if (isValidArgNumber(args, 2)) {
 				String playerName = args[1];
 				Player player = (Bukkit.getServer().getPlayer(playerName));
@@ -64,7 +81,8 @@ public class RFMCommandExecutor implements CommandExecutor {
 					return false;
 				}
 				if (gameController.getHunter(player) != null) {
-					sender.sendMessage(ChatColor.RED + playerName + " 已經在獵人隊伍裡!");
+					sender.sendMessage(ChatColor.RED + playerName
+							+ " 已經在獵人隊伍裡!");
 					return false;
 				}
 				// add runner to game controller

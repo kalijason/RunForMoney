@@ -8,6 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 import runner.game.GameController;
+import runner.game.RFMPlayer;
 
 public class CommandEvent implements Listener {
 
@@ -20,17 +21,19 @@ public class CommandEvent implements Listener {
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onCommand(PlayerCommandPreprocessEvent event) {
 
+		// check if it's a player in game
 		Player player = event.getPlayer();
 		if (player != null
 				&& player instanceof Player
 				&& ((gameController.getRunner(player) != null) || gameController
-						.getHunter(player) != null)) {
-			if (!player.hasPermission("runformoney.admin")) {
-				if (event.getMessage().toLowerCase().indexOf("/login") != -1) {
-					event.setCancelled(true);
-					player.sendMessage(ChatColor.BLUE + "遊戲中不可以使用指令");
-				}
+						.getHunter(player) != null)
 
+				&& !player.hasPermission("runformoney.admin")
+				&& event.getMessage().toLowerCase().indexOf("/login") == -1) {
+			RFMPlayer rfmPlayer = gameController.getRFMPlayer(player);
+			if (rfmPlayer != null && rfmPlayer.isAlive()) {
+				event.setCancelled(true);
+				player.sendMessage(ChatColor.BLUE + "遊戲中不可以使用指令");
 			}
 
 		}

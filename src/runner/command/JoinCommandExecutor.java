@@ -34,7 +34,7 @@ public class JoinCommandExecutor implements CommandExecutor {
 				ChatUtil.sendToSender(sender, ChatColor.RED + "目前沒有遊戲正在等待玩家!");
 			} else {
 				if (gameController.join(player)) {
-					ChatUtil.sendToSender(sender, ChatColor.AQUA + "加入成功!請等待遊戲開始!");
+					ChatUtil.sendToSender(sender, ChatColor.AQUA + "加入成功!請等待遊戲開始!請獵人穿帶上全套鑽石裝備，請逃亡者都脫掉身上的裝備!");
 				} else {
 					ChatUtil.sendToSender(sender, ChatColor.RED + "你已在遊戲中!");
 				}

@@ -7,6 +7,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.potion.PotionEffect;
@@ -15,6 +17,7 @@ import org.bukkit.potion.PotionEffectType;
 import runner.RunForMoney;
 import runner.event.AttackEvent;
 import runner.event.CommandEvent;
+import runner.event.PlayerDeadEvent;
 import runner.event.QuitEvent;
 import runner.util.ChatUtil;
 
@@ -29,12 +32,17 @@ public class GameController {
 	}
 
 	private final int TPS = 20;
-	private long totalTime = 60 * 6; // 6 mins at default
+	private long totalTime = 60 * 10; // 6 mins at default
 	private long startTime;
 	private GameStatus gameStatus;
 	private List<RFMPlayer> runnerList;
 	private List<RFMPlayer> hunterList;
 	RunForMoney runForMoney;
+
+	public RunForMoney getRunForMoney() {
+		return runForMoney;
+	}
+
 	private PrizeDispatcher prizeDispatcher;
 	private InventoryManager invManager;
 
@@ -125,6 +133,23 @@ public class GameController {
 			broadCastInGame(ChatColor.LIGHT_PURPLE + "獵人 " + hunter.getName()
 					+ " 抓到了逃亡者  " + runner.getName() + " ！！！ (存活人數剩"
 					+ getRunnerAlive() + " 人)\n" + getTime());
+			checkIfGameover();
+		}
+	}
+
+	public void checkPlayerDeath(Player player) {
+		RFMPlayer rfmRunner = getRunner(player);
+
+		if (rfmRunner != null && rfmRunner.isAlive()) {
+			rfmRunner.setAlive(false);
+
+			// teleport to observer portal
+			runForMoney.getTeleporter().moveToPortal(player, "RFMobserver");
+
+			broadCastInGame(ChatColor.AQUA + "逃亡者  " + player.getName()
+					+ " 事故身亡！！！ (存活人數剩" + getRunnerAlive() + " 人)\n"
+					+ getTime());
+
 			checkIfGameover();
 		}
 	}
@@ -228,7 +253,7 @@ public class GameController {
 		return statusString.toString();
 	}
 
-	public void playerLeave(RFMPlayer rfmPlayer) {
+	public void checkPlayerLeave(RFMPlayer rfmPlayer) {
 		Player player = getPlayer(rfmPlayer);
 		if (player != null) {
 			runForMoney.getTeleporter().moveToPortal(player, "RFMexit");
@@ -297,6 +322,9 @@ public class GameController {
 		Bukkit.getPluginManager().registerEvents(new QuitEvent(this),
 				runForMoney);
 
+		Bukkit.getPluginManager().registerEvents(new PlayerDeadEvent(this),
+				runForMoney);
+
 		setGameStatus(GameStatus.Running);
 		startTime = System.currentTimeMillis();
 
@@ -331,6 +359,8 @@ public class GameController {
 		EntityDamageEvent.getHandlerList().unregister(runForMoney);
 		PlayerCommandPreprocessEvent.getHandlerList().unregister(runForMoney);
 		PlayerQuitEvent.getHandlerList().unregister(runForMoney);
+		EntityDeathEvent.getHandlerList().unregister(runForMoney);
+
 		runForMoney.getServer().getScheduler().cancelTasks(runForMoney);
 
 		if (gameStatus == GameStatus.Running) {
@@ -364,10 +394,10 @@ public class GameController {
 					@Override
 					public void run() {
 						for (RFMPlayer rfmPlayer : runnerList) {
-							playerLeave(rfmPlayer);
+							checkPlayerLeave(rfmPlayer);
 						}
 						for (RFMPlayer rfmPlayer : hunterList) {
-							playerLeave(rfmPlayer);
+							checkPlayerLeave(rfmPlayer);
 						}
 						ChatUtil.broadcast("玩家傳送結束！！！");
 					}
@@ -381,6 +411,17 @@ public class GameController {
 
 	public void setGameStatus(GameStatus gameStatus) {
 		this.gameStatus = gameStatus;
+	}
+
+	public RFMPlayer getRFMPlayer(Player player) {
+		RFMPlayer rfmPlayer = null;
+		rfmPlayer = getRunner(player);
+		if (rfmPlayer == null) {
+			rfmPlayer = getHunter(player);
+			return rfmPlayer;
+		} else {
+			return rfmPlayer;
+		}
 	}
 
 	public void broadCastInGame(String message) {
