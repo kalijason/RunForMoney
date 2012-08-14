@@ -31,7 +31,7 @@ public class CommandEvent implements Listener {
 				&& !player.hasPermission("runformoney.admin")
 				&& event.getMessage().toLowerCase().indexOf("/login") == -1) {
 			RFMPlayer rfmPlayer = gameController.getRFMPlayer(player);
-			if (rfmPlayer != null && rfmPlayer.isAlive()) {
+			if (rfmPlayer != null ) {
 				event.setCancelled(true);
 				player.sendMessage(ChatColor.BLUE + "遊戲中不可以使用指令");
 			}

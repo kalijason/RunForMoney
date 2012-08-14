@@ -46,12 +46,9 @@ public class RFMCommandExecutor implements CommandExecutor {
 						+ "/rfm hunter <id> - 設定玩家為獵人");
 				sender.sendMessage(ChatColor.AQUA
 						+ "/rfm status - 觀看目前遊戲狀態(只有你看得到)");
-				sender.sendMessage(ChatColor.AQUA
-						+ "/rfm broadcast - 廣撥目前遊戲狀態");
-				sender.sendMessage(ChatColor.AQUA
-						+ "/rfm start - 遊戲開始");
-				sender.sendMessage(ChatColor.AQUA
-						+ "/rfm stop - 遊戲強制結束");
+				sender.sendMessage(ChatColor.AQUA + "/rfm broadcast - 廣撥目前遊戲狀態");
+				sender.sendMessage(ChatColor.AQUA + "/rfm start - 遊戲開始");
+				sender.sendMessage(ChatColor.AQUA + "/rfm stop - 遊戲強制結束");
 				return true;
 			}
 		} else if (args[0].equalsIgnoreCase("runner")) {
@@ -143,8 +140,13 @@ public class RFMCommandExecutor implements CommandExecutor {
 			}
 		} else if (args[0].equalsIgnoreCase("settime")) {
 			if (isValidArgNumber(args, 2)) {
-				gameController.setTime(Integer.parseInt(args[1]));
-				sender.sendMessage(ChatColor.YELLOW + "時間已設定!");
+				if (gameController.getGameStatus() == GameStatus.Running) {
+					sender.sendMessage(ChatColor.YELLOW + "遊戲中無法更改時間，請先強制停止遊戲!");
+				} else {
+					gameController.setTime(Integer.parseInt(args[1]));
+					sender.sendMessage(ChatColor.YELLOW + "時間已設定!");
+				}
+
 				return true;
 			}
 

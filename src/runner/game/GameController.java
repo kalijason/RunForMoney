@@ -10,6 +10,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -18,7 +19,7 @@ import runner.RunForMoney;
 import runner.event.AttackEvent;
 import runner.event.CommandEvent;
 import runner.event.PlayerDeadEvent;
-import runner.event.QuitEvent;
+import runner.event.QuitJoinEvent;
 import runner.util.ChatUtil;
 
 /**
@@ -89,22 +90,73 @@ public class GameController {
 				}, 30 * TPS);
 	}
 
-	public void checkIfGameover() {
-		if (getRunnerAlive() <= 0) {
-			ChatUtil.broadcast(ChatColor.RED + "所有逃亡者皆被補獲！！！");
-			stop();
+	public void lastStatus() {
+		broadCastInGame(ChatColor.GOLD + "遊戲進入白熱化階段，全場獵人速度加快！！！");
+		for (RFMPlayer p : hunterList) {
+			Player hunter = (Bukkit.getServer().getPlayer(p.getName()));
+			if (hunter != null) {
+				hunter.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,
+						30 * TPS, 1));
+			}
 		}
 
-		if (getHunterAlive() <= 0) {
-			ChatUtil.broadcast(ChatColor.RED + "所有獵人放棄遊戲！！！");
-			stop();
+	}
+
+	public void checkIfGameover() {
+		if (gameStatus == GameStatus.Running) {
+			if (getRunnerAlive() <= 0) {
+				ChatUtil.broadcast(ChatColor.RED + "所有逃亡者皆被補獲！！！");
+				stop();
+			}
+
+			if (getHunterAlive() <= 0) {
+				ChatUtil.broadcast(ChatColor.RED + "所有獵人放棄遊戲！！！");
+				stop();
+			}
 		}
 	}
 
+	private void checkAllPlayerBeforeStart() {
+		// check if runners are online
+		for (RFMPlayer rfmPlayer : runnerList) {
+			Player player = getPlayer(rfmPlayer);
+			if (player == null) {
+				rfmPlayer.setAlive(false);
+				broadCastInGame(ChatColor.AQUA + rfmPlayer.getName()
+						+ " 遊戲開始時不在遊戲區內，判定放棄遊戲!" + ChatColor.RESET);
+			}
+		}
+
+		// check if hunters are online
+		for (RFMPlayer rfmPlayer : hunterList) {
+			Player player = getPlayer(rfmPlayer);
+			if (player == null) {
+				rfmPlayer.setAlive(false);
+				broadCastInGame(ChatColor.AQUA + rfmPlayer.getName()
+						+ " 遊戲開始時不在遊戲區內，判定放棄遊戲!" + ChatColor.RESET);
+			}
+		}
+
+	}
+
 	public void checkPlayerQuit(Player player) {
+
+		// Get RFMPlayer to make sure it's a in-game player
 		RFMPlayer rfmPlayer = getHunter(player);
 		if (rfmPlayer == null)
 			rfmPlayer = getRunner(player);
+
+		// when player join or quit from arena world, or it's a in-game player
+		// send to observer
+		if ((rfmPlayer != null)
+				|| (player != null && player.getWorld() != null && player
+						.getWorld().getName()
+						.equalsIgnoreCase(Constants.ARENA_WORLD_NAME))) {
+			// teleport to observer portal
+			runForMoney.getTeleporter().moveToPortal(player, "RFMobserver");
+		}
+
+		// send message and check alive if it's a in-game player
 		if (rfmPlayer != null) {
 			String type = null;
 			if (rfmPlayer.getType() == PlayerType.HUNTER) {
@@ -112,10 +164,14 @@ public class GameController {
 			} else {
 				type = "逃亡者";
 			}
-			rfmPlayer.setAlive(false);
-			broadCastInGame(ChatColor.AQUA + rfmPlayer.getName() + "(" + type
-					+ ")" + " 放棄了遊戲!" + ChatColor.RESET);
-			checkIfGameover();
+
+			if (rfmPlayer.isAlive()) {
+				rfmPlayer.setAlive(false);
+				broadCastInGame(ChatColor.AQUA + rfmPlayer.getName() + "("
+						+ type + ")" + " 放棄了遊戲!" + ChatColor.RESET);
+
+				checkIfGameover();
+			}
 
 		}
 	}
@@ -123,7 +179,8 @@ public class GameController {
 	public void checkRunterKillsRunner(Player hunter, Player runner) {
 		RFMPlayer rfmRunner = getRunner(runner);
 		RFMPlayer rfmHunter = getHunter(hunter);
-		if (rfmRunner != null && rfmHunter != null && rfmRunner.isAlive()) {
+		if (rfmRunner != null && rfmHunter != null && rfmRunner.isAlive()
+				&& rfmHunter.isAlive()) {
 			rfmRunner.setAlive(false);
 			rfmHunter.addKills();
 
@@ -146,7 +203,7 @@ public class GameController {
 			// teleport to observer portal
 			runForMoney.getTeleporter().moveToPortal(player, "RFMobserver");
 
-			broadCastInGame(ChatColor.AQUA + "逃亡者  " + player.getName()
+			broadCastInGame(ChatColor.RED + "逃亡者  " + player.getName()
 					+ " 事故身亡！！！ (存活人數剩" + getRunnerAlive() + " 人)\n"
 					+ getTime());
 
@@ -306,6 +363,10 @@ public class GameController {
 	}
 
 	public void setTime(int secs) {
+		// must greater than 1 mins
+		if (secs < 60) {
+			secs = 60;
+		}
 		broadCastInGame("遊戲時間設定為 " + ChatUtil.secToString(secs));
 		totalTime = secs;
 	}
@@ -313,13 +374,14 @@ public class GameController {
 	public void start() {
 
 		ChatUtil.broadcast(ChatColor.GOLD + "==全員逃走中遊戲正式開始，死命逃吧！！！==");
+
 		Bukkit.getPluginManager().registerEvents(new AttackEvent(this),
 				runForMoney);
 
 		Bukkit.getPluginManager().registerEvents(new CommandEvent(this),
 				runForMoney);
 
-		Bukkit.getPluginManager().registerEvents(new QuitEvent(this),
+		Bukkit.getPluginManager().registerEvents(new QuitJoinEvent(this),
 				runForMoney);
 
 		Bukkit.getPluginManager().registerEvents(new PlayerDeadEvent(this),
@@ -328,6 +390,7 @@ public class GameController {
 		setGameStatus(GameStatus.Running);
 		startTime = System.currentTimeMillis();
 
+		checkAllPlayerBeforeStart();
 		ChatUtil.broadcast(getStatus());
 
 		// show status each 30 secs
@@ -349,7 +412,18 @@ public class GameController {
 					}
 				}, totalTime * TPS);
 
+		// speed up hunters at last 30 secs
+		runForMoney.getServer().getScheduler()
+				.scheduleSyncDelayedTask(runForMoney, new Runnable() {
+					@Override
+					public void run() {
+						lastStatus();
+					}
+				}, (totalTime - 30) * TPS);
+
 		beginStatus();
+		checkIfGameover();
+
 	}
 
 	public void stop() {
@@ -359,6 +433,7 @@ public class GameController {
 		EntityDamageEvent.getHandlerList().unregister(runForMoney);
 		PlayerCommandPreprocessEvent.getHandlerList().unregister(runForMoney);
 		PlayerQuitEvent.getHandlerList().unregister(runForMoney);
+		PlayerLoginEvent.getHandlerList().unregister(runForMoney);
 		EntityDeathEvent.getHandlerList().unregister(runForMoney);
 
 		runForMoney.getServer().getScheduler().cancelTasks(runForMoney);
