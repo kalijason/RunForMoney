@@ -106,7 +106,7 @@ public class GameController {
 		double chance = 0.333;
 		Random r = new Random();
 		if (chance > r.nextDouble()) {
-			broadCastInGame(ChatColor.GOLD + "夜黑風高 殺 人 夜！ 全場所有人伸手不見五指30秒！");
+			broadCastInGame(ChatColor.GOLD + "夜黑風高殺人夜！ 全場所有人伸手不見五指30秒！");
 			for (RFMPlayer p : hunterList) {
 				Player hunter = (Bukkit.getServer().getPlayer(p.getName()));
 				if (hunter != null) {
