@@ -34,9 +34,15 @@ public class Teleporter {
 	 * @param player
 	 */
 	public void moveToPortal(Player player, String portalName) {
-		MVPortal p = multiversePortals.getPortalManager().getPortal(portalName);
-		SafeTTeleporter t = multiversePortals.getCore().getSafeTTeleporter();
-		t.safelyTeleport(player, player, p.getDestination());
+		try {
+			MVPortal p = multiversePortals.getPortalManager().getPortal(
+					portalName);
+			SafeTTeleporter t = multiversePortals.getCore()
+					.getSafeTTeleporter();
+			t.safelyTeleport(player, player, p.getDestination());
+		} catch (Exception ignore) {
+			ignore.printStackTrace();
+		}
 
 	}
 }

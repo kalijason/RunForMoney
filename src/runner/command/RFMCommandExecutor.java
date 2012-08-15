@@ -157,6 +157,7 @@ public class RFMCommandExecutor implements CommandExecutor {
 				} else {
 					gameController.reset();
 					gameController.setGameStatus(GameStatus.Waiting);
+
 					ChatUtil.broadcast(ChatColor.YELLOW
 							+ "全員逃走中即將開始，欲參加的玩家請輸入/join加入遊戲!");
 					ChatUtil.sendToSender(

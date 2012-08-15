@@ -1,6 +1,7 @@
 package runner.game;
 
 import java.util.List;
+import java.util.Random;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -9,15 +10,17 @@ import runner.util.PlayerUtil;
 
 public class PrizeDispatcher {
 	private RunForMoney runForMoney;
+	Random random;
 
 	public PrizeDispatcher(RunForMoney runForMoney) {
 		this.runForMoney = runForMoney;
+		this.random = new Random();
 	}
 
 	public void dispatchToHunters(List<RFMPlayer> hunterList) {
 		// 抓到玩家大於一人則有一個獎品，再來每抓三人就有一個獎品
 		for (RFMPlayer p : hunterList) {
-			int defaultPrize = 1;
+			int defaultPrize = 300;
 			if (p.getKills() > 0 && p.isAlive()) {
 				defaultPrize += (p.getKills() / 3);
 			}
@@ -39,7 +42,7 @@ public class PrizeDispatcher {
 		final Material[] priceList = { Material.DIAMOND, Material.GLOWSTONE,
 				Material.SLIME_BALL };
 		// get random between
-		int r = (int) (Math.random() * priceList.length);
+		int r = (int) random.nextInt(priceList.length);
 
 		return priceList[r];
 	}

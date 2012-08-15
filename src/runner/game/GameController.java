@@ -8,7 +8,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -311,6 +310,7 @@ public class GameController {
 	}
 
 	public void checkPlayerLeave(RFMPlayer rfmPlayer) {
+		
 		Player player = getPlayer(rfmPlayer);
 		if (player != null) {
 			runForMoney.getTeleporter().moveToPortal(player, "RFMexit");
@@ -450,9 +450,13 @@ public class GameController {
 	}
 
 	private void disPatchPrize() {
+		try {
+			prizeDispatcher.dispatchToRunners(runnerList);
+			prizeDispatcher.dispatchToHunters(hunterList);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
-		prizeDispatcher.dispatchToRunners(runnerList);
-		prizeDispatcher.dispatchToHunters(hunterList);
 		ChatUtil.broadcast("¼ú«~µo°eµ²§ô¡I¡I¡I");
 	}
 
