@@ -2,6 +2,7 @@ package runner.game;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -99,6 +100,39 @@ public class GameController {
 			}
 		}
 
+	}
+
+	public void blindStatus() {
+		double chance = 0.333;
+		Random r = new Random();
+		if (chance > r.nextDouble()) {
+			broadCastInGame(ChatColor.GOLD + "夜黑風高 殺 人 夜！ 全場所有人伸手不見五指30秒！");
+			for (RFMPlayer p : hunterList) {
+				Player hunter = (Bukkit.getServer().getPlayer(p.getName()));
+				if (hunter != null) {
+					hunter.addPotionEffect(new PotionEffect(
+							PotionEffectType.BLINDNESS, 30 * TPS, 1));
+				}
+			}
+
+			for (RFMPlayer p : runnerList) {
+				Player runner = (Bukkit.getServer().getPlayer(p.getName()));
+				if (runner != null) {
+					runner.addPotionEffect(new PotionEffect(
+							PotionEffectType.BLINDNESS, 30 * TPS, 1));
+				}
+			}
+
+			// set time out
+			runForMoney.getServer().getScheduler()
+					.scheduleSyncDelayedTask(runForMoney, new Runnable() {
+						@Override
+						public void run() {
+							broadCastInGame(ChatColor.GOLD + "黑暗已退卻，重見光明！");
+
+						}
+					}, 30 * TPS);
+		}
 	}
 
 	public void checkIfGameover() {
@@ -310,7 +344,7 @@ public class GameController {
 	}
 
 	public void checkPlayerLeave(RFMPlayer rfmPlayer) {
-		
+
 		Player player = getPlayer(rfmPlayer);
 		if (player != null) {
 			runForMoney.getTeleporter().moveToPortal(player, "RFMexit");
@@ -421,7 +455,35 @@ public class GameController {
 					}
 				}, (totalTime - 30) * TPS);
 
+		// blindStatus
+		runForMoney.getServer().getScheduler()
+				.scheduleSyncDelayedTask(runForMoney, new Runnable() {
+					@Override
+					public void run() {
+						blindStatus();
+					}
+				}, (totalTime / 4 * 1) * TPS);
+
+		// blindStatus
+		runForMoney.getServer().getScheduler()
+				.scheduleSyncDelayedTask(runForMoney, new Runnable() {
+					@Override
+					public void run() {
+						blindStatus();
+					}
+				}, (totalTime / 4 * 2) * TPS);
+
+		// blindStatus
+		runForMoney.getServer().getScheduler()
+				.scheduleSyncDelayedTask(runForMoney, new Runnable() {
+					@Override
+					public void run() {
+						blindStatus();
+					}
+				}, (totalTime / 4 * 3) * TPS);
+
 		beginStatus();
+
 		checkIfGameover();
 
 	}
