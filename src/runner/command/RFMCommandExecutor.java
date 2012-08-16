@@ -169,12 +169,12 @@ public class RFMCommandExecutor implements CommandExecutor {
 			}
 
 		} else if (args[0].equalsIgnoreCase("test")) {
-			Player player = (Bukkit.getServer().getPlayer("kalijason"));
+			/*Player player = (Bukkit.getServer().getPlayer("kalijason"));
 			gameController.reset();
 			gameController.setGameStatus(GameStatus.Waiting);
 			gameController.addHunter(player);
 			gameController.addRunner(player);
-			gameController.start();
+			gameController.start();*/
 			return true;
 		}
 

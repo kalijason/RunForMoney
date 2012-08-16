@@ -1,6 +1,7 @@
 package runner.event;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -8,6 +9,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import runner.game.GameController;
+import runner.game.GameController.GameStatus;
 import runner.util.ChatUtil;
 
 public class InventoryEventManager implements Listener {
@@ -25,8 +27,9 @@ public class InventoryEventManager implements Listener {
 		if (player != null
 				&& (gameController.getHunter(player) != null || gameController
 						.getRunner(player) != null)
+				&& gameController.getGameStatus() != GameStatus.Running
 				&& event.getSlotType() == SlotType.ARMOR) {
-			ChatUtil.broadcast("遊戲中不可以更換裝備");
+			ChatUtil.sendToSender(player, ChatColor.RED + "遊戲中不可以更換裝備!!");
 			event.setCancelled(true);
 		}
 
