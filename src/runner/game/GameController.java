@@ -7,9 +7,11 @@ import java.util.Random;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -20,6 +22,7 @@ import org.bukkit.potion.PotionEffectType;
 import runner.RunForMoney;
 import runner.event.AttackEvent;
 import runner.event.CommandEvent;
+import runner.event.InventoryEventManager;
 import runner.event.PlayerDeadEvent;
 import runner.event.QuitJoinEvent;
 import runner.util.ChatUtil;
@@ -175,6 +178,8 @@ public class GameController {
 	}
 
 	public void checkPlayerQuit(Player player) {
+		// restore his items
+		invManager.withDraw(player);
 
 		// Get RFMPlayer to make sure it's a in-game player
 		RFMPlayer rfmPlayer = getHunter(player);
@@ -407,7 +412,28 @@ public class GameController {
 		totalTime = secs;
 	}
 
+	private void prepareHunters() {
+		for (RFMPlayer rfmPlayer : hunterList) {
+			Player player = (Bukkit.getServer().getPlayer(rfmPlayer.getName()));
+			if (player != null) {
+				invManager.store(player);
+				invManager.setHunter(player);
+			}
+		}
+	}
+
+	private void restoreHunters() {
+		for (RFMPlayer rfmPlayer : hunterList) {
+			Player player = (Bukkit.getServer().getPlayer(rfmPlayer.getName()));
+			if (player != null) {
+				invManager.withDraw(player);
+			}
+		}
+	}
+
 	public void start() {
+
+		prepareHunters();
 
 		ChatUtil.broadcast(ChatColor.GOLD + "==全員逃走中遊戲正式開始，死命逃吧！！！==");
 
@@ -422,6 +448,9 @@ public class GameController {
 
 		Bukkit.getPluginManager().registerEvents(new PlayerDeadEvent(this),
 				runForMoney);
+
+		Bukkit.getPluginManager().registerEvents(
+				new InventoryEventManager(this), runForMoney);
 
 		setGameStatus(GameStatus.Running);
 		startTime = System.currentTimeMillis();
@@ -500,7 +529,8 @@ public class GameController {
 		PlayerLoginEvent.getHandlerList().unregister(runForMoney);
 		PlayerRespawnEvent.getHandlerList().unregister(runForMoney);
 		PlayerDeathEvent.getHandlerList().unregister(runForMoney);
-		
+		InventoryClickEvent.getHandlerList().unregister(runForMoney);
+
 		runForMoney.getServer().getScheduler().cancelTasks(runForMoney);
 
 		if (gameStatus == GameStatus.Running) {
@@ -509,6 +539,9 @@ public class GameController {
 
 			// teleport all players out of arena
 			teleportAllPlayerOut();
+
+			// restore hunter's item
+			restoreHunters();
 		}
 
 		setGameStatus(GameStatus.Standy);

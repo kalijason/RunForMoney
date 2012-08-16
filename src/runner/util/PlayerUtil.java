@@ -1,5 +1,6 @@
 package runner.util;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -22,13 +23,14 @@ public class PlayerUtil {
 		inv.setArmorContents(diamondList);
 	}
 
-	static public void setDiamond(Player player) {
-		PlayerInventory inv = player.getInventory();
-		ItemStack[] diamondList = { new ItemStack(Material.DIAMOND_HELMET),
-				new ItemStack(Material.DIAMOND_BOOTS),
-				new ItemStack(Material.DIAMOND_CHESTPLATE),
-				new ItemStack(Material.DIAMOND_LEGGINGS) };
-		inv.setArmorContents(diamondList);
+	static public Player getPlayer(String playerName) {
+		if (playerName != null) {
+			Player player = (Bukkit.getServer().getPlayer(playerName));
+			return player;
+		} else {
+			return null;
+		}
+
 	}
 
 }

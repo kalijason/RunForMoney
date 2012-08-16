@@ -2,14 +2,17 @@ package runner.command;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import runner.game.GameController;
 import runner.game.GameController.GameStatus;
 import runner.util.ChatUtil;
+import runner.util.PlayerUtil;
 
 public class RFMCommandExecutor implements CommandExecutor {
 
@@ -170,6 +173,12 @@ public class RFMCommandExecutor implements CommandExecutor {
 			}
 
 		} else if (args[0].equalsIgnoreCase("test")) {
+			Player player = (Bukkit.getServer().getPlayer("kalijason"));
+			gameController.reset();
+			gameController.setGameStatus(GameStatus.Waiting);
+			gameController.addHunter(player);
+			gameController.addRunner(player);
+			gameController.start();
 			return true;
 		}
 

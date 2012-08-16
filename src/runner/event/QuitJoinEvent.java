@@ -22,6 +22,7 @@ public class QuitJoinEvent implements Listener {
 		Player player = event.getPlayer();
 		if (player != null) {
 			gameController.checkPlayerQuit(player);
+
 		}
 	}
 

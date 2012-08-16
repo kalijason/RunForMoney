@@ -36,8 +36,12 @@ public class JoinCommandExecutor implements CommandExecutor {
 						+ "目前遊戲正在進行中!請等待下一場吧!");
 			} else {
 				if (gameController.join(player)) {
+					/*
+					 * ChatUtil.sendToSender(sender, ChatColor.AQUA +
+					 * "加入成功!請等待遊戲開始!請獵人穿帶上全套鑽石裝備，請逃亡者都脫掉身上的裝備!");
+					 */
 					ChatUtil.sendToSender(sender, ChatColor.AQUA
-							+ "加入成功!請等待遊戲開始!請獵人穿帶上全套鑽石裝備，請逃亡者都脫掉身上的裝備!");
+							+ "加入成功!請等待遊戲開始!遊戲開始會自動更換裝備!");
 				} else {
 					ChatUtil.sendToSender(sender, ChatColor.RED + "你已在遊戲中!");
 				}
