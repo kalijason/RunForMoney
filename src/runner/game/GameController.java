@@ -7,6 +7,7 @@ import java.util.Random;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -567,14 +568,17 @@ public class GameController {
 		ChatUtil.broadcast("¹CÀ¸µ²§ô¡I¡I¡I");
 		ChatUtil.broadcast(getStatus());
 
-		EntityDamageByEntityEvent.getHandlerList().unregister(runForMoney);
-		PlayerCommandPreprocessEvent.getHandlerList().unregister(runForMoney);
-		PlayerQuitEvent.getHandlerList().unregister(runForMoney);
-		PlayerLoginEvent.getHandlerList().unregister(runForMoney);
-		PlayerRespawnEvent.getHandlerList().unregister(runForMoney);
-		PlayerDeathEvent.getHandlerList().unregister(runForMoney);
-		InventoryClickEvent.getHandlerList().unregister(runForMoney);
-
+		/*
+		 * EntityDamageByEntityEvent.getHandlerList().unregister(runForMoney);
+		 * PlayerCommandPreprocessEvent
+		 * .getHandlerList().unregister(runForMoney);
+		 * PlayerQuitEvent.getHandlerList().unregister(runForMoney);
+		 * PlayerLoginEvent.getHandlerList().unregister(runForMoney);
+		 * PlayerRespawnEvent.getHandlerList().unregister(runForMoney);
+		 * PlayerDeathEvent.getHandlerList().unregister(runForMoney);
+		 * InventoryClickEvent.getHandlerList().unregister(runForMoney);
+		 */
+		HandlerList.unregisterAll(runForMoney);
 		runForMoney.getServer().getScheduler().cancelTasks(runForMoney);
 
 		if (gameStatus == GameStatus.Running) {
