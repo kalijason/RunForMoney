@@ -9,9 +9,11 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -33,7 +35,7 @@ public class GameController {
 	}
 
 	private final int TPS = 20;
-	private long totalTime = 60 * 10; // 6 mins at default
+	private long totalTime = 60 * 15; // 15 mins at default
 	private long startTime;
 	private GameStatus gameStatus;
 	private List<RFMPlayer> runnerList;
@@ -496,8 +498,9 @@ public class GameController {
 		PlayerCommandPreprocessEvent.getHandlerList().unregister(runForMoney);
 		PlayerQuitEvent.getHandlerList().unregister(runForMoney);
 		PlayerLoginEvent.getHandlerList().unregister(runForMoney);
-		EntityDeathEvent.getHandlerList().unregister(runForMoney);
-
+		PlayerRespawnEvent.getHandlerList().unregister(runForMoney);
+		PlayerDeathEvent.getHandlerList().unregister(runForMoney);
+		
 		runForMoney.getServer().getScheduler().cancelTasks(runForMoney);
 
 		if (gameStatus == GameStatus.Running) {
