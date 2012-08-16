@@ -5,32 +5,25 @@ import java.util.HashMap;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 
 public class InventoryManager {
-	HashMap<Player, ItemStack[]> invBank;
+	HashMap<String, ItemStack[]> invBank;
 	GameController controller;
 
 	public InventoryManager(GameController controller) {
-		invBank = new HashMap<Player, ItemStack[]>();
+		invBank = new HashMap<String, ItemStack[]>();
 		this.controller = controller;
 	}
 
-	public void withDraw(Player player) {
-		if (player != null) {
-			ItemStack[] i = invBank.get(player);
-			if (i != null) {
-				player.getInventory().setArmorContents(i);
-				invBank.remove(i);
-			}
-		}
-	}
+	private void clear(Player player) {
+		if (player != null && player.getInventory() != null) {
+			player.getInventory().setHelmet(new ItemStack(Material.AIR));
+			player.getInventory().setLeggings(new ItemStack(Material.AIR));
+			player.getInventory().setChestplate(new ItemStack(Material.AIR));
+			player.getInventory().setBoots(new ItemStack(Material.AIR));
 
-	public void store(Player player) {
-		if (player != null) {
-			invBank.put(player, player.getInventory().getArmorContents());
-			clear(player);
 		}
+
 	}
 
 	public void setHunter(Player player) {
@@ -46,15 +39,22 @@ public class InventoryManager {
 		}
 	}
 
-	private void clear(Player player) {
-		if (player != null && player.getInventory() != null) {
-			player.getInventory().setHelmet(new ItemStack(Material.AIR));
-			player.getInventory().setLeggings(new ItemStack(Material.AIR));
-			player.getInventory().setChestplate(new ItemStack(Material.AIR));
-			player.getInventory().setBoots(new ItemStack(Material.AIR));
-
+	public void store(Player player) {
+		if (player != null) {
+			invBank.put(player.getName(), player.getInventory()
+					.getArmorContents());
+			clear(player);
 		}
+	}
 
+	public void withDraw(Player player) {
+		if (player != null) {
+			ItemStack[] i = invBank.get(player.getName());
+			if (i != null) {
+				player.getInventory().setArmorContents(i);
+				invBank.remove(i);
+			}
+		}
 	}
 
 }

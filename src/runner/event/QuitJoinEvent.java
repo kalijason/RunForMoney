@@ -18,19 +18,19 @@ public class QuitJoinEvent implements Listener {
 	}
 
 	@EventHandler(priority = EventPriority.NORMAL)
+	public void onLogin(PlayerLoginEvent event) {
+		Player player = event.getPlayer();
+		if (player != null) {
+			gameController.checkPlayerQuit(player);
+		}
+	}
+
+	@EventHandler(priority = EventPriority.NORMAL)
 	public void onQuit(PlayerQuitEvent event) {
 		Player player = event.getPlayer();
 		if (player != null) {
 			gameController.checkPlayerQuit(player);
 
-		}
-	}
-
-	@EventHandler(priority = EventPriority.NORMAL)
-	public void onLogin(PlayerLoginEvent event) {
-		Player player = event.getPlayer();
-		if (player != null) {
-			gameController.checkPlayerQuit(player);
 		}
 	}
 }

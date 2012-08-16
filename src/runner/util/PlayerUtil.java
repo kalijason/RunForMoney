@@ -9,6 +9,16 @@ import org.bukkit.inventory.PlayerInventory;
 
 public class PlayerUtil {
 
+	static public Player getPlayer(String playerName) {
+		if (playerName != null) {
+			Player player = (Bukkit.getServer().getPlayer(playerName));
+			return player;
+		} else {
+			return null;
+		}
+
+	}
+
 	static public void giveItem(Player player, Material type, int number) {
 		ItemStack item = new ItemStack(type, number);
 		player.getInventory().addItem(item);
@@ -21,16 +31,6 @@ public class PlayerUtil {
 				new ItemStack(Material.AIR), new ItemStack(Material.AIR),
 				new ItemStack(Material.AIR) };
 		inv.setArmorContents(diamondList);
-	}
-
-	static public Player getPlayer(String playerName) {
-		if (playerName != null) {
-			Player player = (Bukkit.getServer().getPlayer(playerName));
-			return player;
-		} else {
-			return null;
-		}
-
 	}
 
 }

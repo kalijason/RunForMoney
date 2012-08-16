@@ -42,7 +42,7 @@ public class PrizeDispatcher {
 		final Material[] priceList = { Material.DIAMOND, Material.GLOWSTONE,
 				Material.SLIME_BALL };
 		// get random between
-		int r = (int) random.nextInt(priceList.length);
+		int r = random.nextInt(priceList.length);
 
 		return priceList[r];
 	}

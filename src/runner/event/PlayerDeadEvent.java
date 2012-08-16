@@ -21,35 +21,6 @@ public class PlayerDeadEvent implements Listener {
 	}
 
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onRespawn(PlayerRespawnEvent event) {
-		final Player player = event.getPlayer();
-		// check if it's a player in game and death, teleport back to observer
-
-		if (player != null
-				&& player instanceof Player
-				&& ((gameController.getRunner(player) != null) || gameController
-						.getHunter(player) != null)) {
-			RFMPlayer rfmPlayer = gameController.getRFMPlayer(player);
-			if (rfmPlayer != null && !rfmPlayer.isAlive()) {
-
-				Bukkit.getScheduler().scheduleSyncDelayedTask(
-						gameController.getRunForMoney(), new Runnable() {
-
-							@Override
-							public void run() {
-								gameController.getRunForMoney().getTeleporter()
-										.moveToPortal(player, "RFMobserver");
-
-							}
-
-						});
-
-			}
-		}
-
-	}
-
-	@EventHandler(priority = EventPriority.HIGH)
 	public void onDeath(PlayerDeathEvent event) {
 
 		final Player player = event.getEntity();
@@ -105,5 +76,34 @@ public class PlayerDeadEvent implements Listener {
 					});
 
 		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGH)
+	public void onRespawn(PlayerRespawnEvent event) {
+		final Player player = event.getPlayer();
+		// check if it's a player in game and death, teleport back to observer
+
+		if (player != null
+				&& player instanceof Player
+				&& ((gameController.getRunner(player) != null) || gameController
+						.getHunter(player) != null)) {
+			RFMPlayer rfmPlayer = gameController.getRFMPlayer(player);
+			if (rfmPlayer != null && !rfmPlayer.isAlive()) {
+
+				Bukkit.getScheduler().scheduleSyncDelayedTask(
+						gameController.getRunForMoney(), new Runnable() {
+
+							@Override
+							public void run() {
+								gameController.getRunForMoney().getTeleporter()
+										.moveToPortal(player, "RFMobserver");
+
+							}
+
+						});
+
+			}
+		}
+
 	}
 }

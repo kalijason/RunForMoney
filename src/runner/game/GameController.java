@@ -7,9 +7,8 @@ import java.util.Random;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
@@ -45,11 +44,8 @@ public class GameController {
 	private List<RFMPlayer> hunterList;
 	RunForMoney runForMoney;
 
-	public RunForMoney getRunForMoney() {
-		return runForMoney;
-	}
-
 	private PrizeDispatcher prizeDispatcher;
+
 	private InventoryManager invManager;
 
 	public GameController(RunForMoney runForMoney) {
@@ -95,18 +91,6 @@ public class GameController {
 				}, 30 * TPS);
 	}
 
-	public void lastStatus() {
-		broadCastInGame(ChatColor.GOLD + "遊戲進入白熱化階段，全場獵人速度加快！！！");
-		for (RFMPlayer p : hunterList) {
-			Player hunter = (Bukkit.getServer().getPlayer(p.getName()));
-			if (hunter != null) {
-				hunter.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,
-						30 * TPS, 1));
-			}
-		}
-
-	}
-
 	public void blindStatus() {
 		double chance = 0.333;
 		Random r = new Random();
@@ -140,17 +124,12 @@ public class GameController {
 		}
 	}
 
-	public void checkIfGameover() {
-		if (gameStatus == GameStatus.Running) {
-			if (getRunnerAlive() <= 0) {
-				ChatUtil.broadcast(ChatColor.RED + "所有逃亡者皆被補獲！！！");
-				stop();
-			}
-
-			if (getHunterAlive() <= 0) {
-				ChatUtil.broadcast(ChatColor.RED + "所有獵人放棄遊戲！！！");
-				stop();
-			}
+	public void broadCastInGame(String message) {
+		for (RFMPlayer rfmPlayer : runnerList) {
+			ChatUtil.sendToSender(getPlayer(rfmPlayer), message);
+		}
+		for (RFMPlayer rfmPlayer : hunterList) {
+			ChatUtil.sendToSender(getPlayer(rfmPlayer), message);
 		}
 	}
 
@@ -175,6 +154,45 @@ public class GameController {
 			}
 		}
 
+	}
+
+	public void checkIfGameover() {
+		if (gameStatus == GameStatus.Running) {
+			if (getRunnerAlive() <= 0) {
+				ChatUtil.broadcast(ChatColor.RED + "所有逃亡者皆被補獲！！！");
+				stop();
+			}
+
+			if (getHunterAlive() <= 0) {
+				ChatUtil.broadcast(ChatColor.RED + "所有獵人放棄遊戲！！！");
+				stop();
+			}
+		}
+	}
+
+	public void checkPlayerDeath(Player player) {
+		RFMPlayer rfmRunner = getRunner(player);
+
+		if (rfmRunner != null && rfmRunner.isAlive()) {
+			rfmRunner.setAlive(false);
+
+			// teleport to observer portal
+			runForMoney.getTeleporter().moveToPortal(player, "RFMobserver");
+
+			broadCastInGame(ChatColor.RED + "逃亡者  " + player.getName()
+					+ " 事故身亡！！！ (存活人數剩" + getRunnerAlive() + " 人)\n"
+					+ getTime());
+
+			checkIfGameover();
+		}
+	}
+
+	public void checkPlayerLeave(RFMPlayer rfmPlayer) {
+
+		Player player = getPlayer(rfmPlayer);
+		if (player != null) {
+			runForMoney.getTeleporter().moveToPortal(player, "RFMexit");
+		}
 	}
 
 	public void checkPlayerQuit(Player player) {
@@ -234,21 +252,19 @@ public class GameController {
 		}
 	}
 
-	public void checkPlayerDeath(Player player) {
-		RFMPlayer rfmRunner = getRunner(player);
-
-		if (rfmRunner != null && rfmRunner.isAlive()) {
-			rfmRunner.setAlive(false);
-
-			// teleport to observer portal
-			runForMoney.getTeleporter().moveToPortal(player, "RFMobserver");
-
-			broadCastInGame(ChatColor.RED + "逃亡者  " + player.getName()
-					+ " 事故身亡！！！ (存活人數剩" + getRunnerAlive() + " 人)\n"
-					+ getTime());
-
-			checkIfGameover();
+	private void disPatchPrize() {
+		try {
+			prizeDispatcher.dispatchToRunners(runnerList);
+			prizeDispatcher.dispatchToHunters(hunterList);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+
+		ChatUtil.broadcast("獎品發送結束！！！");
+	}
+
+	public GameStatus getGameStatus() {
+		return gameStatus;
 	}
 
 	public RFMPlayer getHunter(Player player) {
@@ -274,14 +290,24 @@ public class GameController {
 		return hunterList;
 	}
 
-	public boolean join(Player player) {
-		if (getRunner(player) == null && getHunter(player) == null) {
-			addRunner(player);
+	private Player getPlayer(RFMPlayer rfmPlayer) {
+		Player player = runForMoney.getServer().getPlayer(rfmPlayer.getName());
+		return player;
+	}
 
-			return true;
+	public RFMPlayer getRFMPlayer(Player player) {
+		RFMPlayer rfmPlayer = null;
+		rfmPlayer = getRunner(player);
+		if (rfmPlayer == null) {
+			rfmPlayer = getHunter(player);
+			return rfmPlayer;
 		} else {
-			return false;
+			return rfmPlayer;
 		}
+	}
+
+	public RunForMoney getRunForMoney() {
+		return runForMoney;
 	}
 
 	public RFMPlayer getRunner(Player player) {
@@ -350,14 +376,6 @@ public class GameController {
 		return statusString.toString();
 	}
 
-	public void checkPlayerLeave(RFMPlayer rfmPlayer) {
-
-		Player player = getPlayer(rfmPlayer);
-		if (player != null) {
-			runForMoney.getTeleporter().moveToPortal(player, "RFMexit");
-		}
-	}
-
 	public String getTime() {
 		StringBuffer statusString = new StringBuffer();
 		if (gameStatus == GameStatus.Running) {
@@ -373,11 +391,34 @@ public class GameController {
 		return statusString.toString();
 	}
 
-	public void removeRunner(Player player) {
-		for (RFMPlayer p : runnerList) {
-			if (p.getName().equalsIgnoreCase(player.getName())) {
-				runnerList.remove(p);
-				return;
+	public boolean join(Player player) {
+		if (getRunner(player) == null && getHunter(player) == null) {
+			addRunner(player);
+
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public void lastStatus() {
+		broadCastInGame(ChatColor.GOLD + "遊戲進入白熱化階段，全場獵人速度加快！！！");
+		for (RFMPlayer p : hunterList) {
+			Player hunter = (Bukkit.getServer().getPlayer(p.getName()));
+			if (hunter != null) {
+				hunter.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,
+						30 * TPS, 1));
+			}
+		}
+
+	}
+
+	private void prepareHunters() {
+		for (RFMPlayer rfmPlayer : hunterList) {
+			Player player = (Bukkit.getServer().getPlayer(rfmPlayer.getName()));
+			if (player != null) {
+				invManager.store(player);
+				invManager.setHunter(player);
 			}
 		}
 	}
@@ -386,6 +427,15 @@ public class GameController {
 		for (RFMPlayer p : hunterList) {
 			if (p.getName().equalsIgnoreCase(player.getName())) {
 				hunterList.remove(p);
+				return;
+			}
+		}
+	}
+
+	public void removeRunner(Player player) {
+		for (RFMPlayer p : runnerList) {
+			if (p.getName().equalsIgnoreCase(player.getName())) {
+				runnerList.remove(p);
 				return;
 			}
 		}
@@ -403,25 +453,6 @@ public class GameController {
 		hunterList.clear();
 	}
 
-	public void setTime(int secs) {
-		// must greater than 1 mins
-		if (secs < 60) {
-			secs = 60;
-		}
-		broadCastInGame("遊戲時間設定為 " + ChatUtil.secToString(secs));
-		totalTime = secs;
-	}
-
-	private void prepareHunters() {
-		for (RFMPlayer rfmPlayer : hunterList) {
-			Player player = (Bukkit.getServer().getPlayer(rfmPlayer.getName()));
-			if (player != null) {
-				invManager.store(player);
-				invManager.setHunter(player);
-			}
-		}
-	}
-
 	private void restoreHunters() {
 		for (RFMPlayer rfmPlayer : hunterList) {
 			Player player = (Bukkit.getServer().getPlayer(rfmPlayer.getName()));
@@ -429,6 +460,19 @@ public class GameController {
 				invManager.withDraw(player);
 			}
 		}
+	}
+
+	public void setGameStatus(GameStatus gameStatus) {
+		this.gameStatus = gameStatus;
+	}
+
+	public void setTime(int secs) {
+		// must greater than 1 mins
+		if (secs < 60) {
+			secs = 60;
+		}
+		broadCastInGame("遊戲時間設定為 " + ChatUtil.secToString(secs));
+		totalTime = secs;
 	}
 
 	public void start() {
@@ -523,7 +567,7 @@ public class GameController {
 		ChatUtil.broadcast("遊戲結束！！！");
 		ChatUtil.broadcast(getStatus());
 
-		EntityDamageEvent.getHandlerList().unregister(runForMoney);
+		EntityDamageByEntityEvent.getHandlerList().unregister(runForMoney);
 		PlayerCommandPreprocessEvent.getHandlerList().unregister(runForMoney);
 		PlayerQuitEvent.getHandlerList().unregister(runForMoney);
 		PlayerLoginEvent.getHandlerList().unregister(runForMoney);
@@ -547,22 +591,6 @@ public class GameController {
 		setGameStatus(GameStatus.Standy);
 	}
 
-	private void disPatchPrize() {
-		try {
-			prizeDispatcher.dispatchToRunners(runnerList);
-			prizeDispatcher.dispatchToHunters(hunterList);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		ChatUtil.broadcast("獎品發送結束！！！");
-	}
-
-	private Player getPlayer(RFMPlayer rfmPlayer) {
-		Player player = runForMoney.getServer().getPlayer(rfmPlayer.getName());
-		return player;
-	}
-
 	public void teleportAllPlayerOut() {
 		ChatUtil.broadcast("3 秒後傳送玩家出場！！！");
 		runForMoney.getServer().getScheduler()
@@ -580,33 +608,5 @@ public class GameController {
 					}
 				}, 3 * TPS);
 
-	}
-
-	public GameStatus getGameStatus() {
-		return gameStatus;
-	}
-
-	public void setGameStatus(GameStatus gameStatus) {
-		this.gameStatus = gameStatus;
-	}
-
-	public RFMPlayer getRFMPlayer(Player player) {
-		RFMPlayer rfmPlayer = null;
-		rfmPlayer = getRunner(player);
-		if (rfmPlayer == null) {
-			rfmPlayer = getHunter(player);
-			return rfmPlayer;
-		} else {
-			return rfmPlayer;
-		}
-	}
-
-	public void broadCastInGame(String message) {
-		for (RFMPlayer rfmPlayer : runnerList) {
-			ChatUtil.sendToSender(getPlayer(rfmPlayer), message);
-		}
-		for (RFMPlayer rfmPlayer : hunterList) {
-			ChatUtil.sendToSender(getPlayer(rfmPlayer), message);
-		}
 	}
 }
