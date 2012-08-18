@@ -186,6 +186,20 @@ public class GameController {
 
 			checkIfGameover();
 		}
+
+		RFMPlayer rfmHunter = getHunter(player);
+		if (rfmHunter != null && rfmHunter.isAlive()) {
+			rfmHunter.setAlive(false);
+
+			// teleport to observer portal
+			runForMoney.getTeleporter().moveToPortal(player, "RFMobserver");
+
+			broadCastInGame(ChatColor.RED + "獵人  " + player.getName()
+					+ " 事故身亡！！！ (存活人數剩" + getHunterAlive() + " 人)\n"
+					+ getTime());
+
+			checkIfGameover();
+		}
 	}
 
 	public void checkPlayerLeave(RFMPlayer rfmPlayer) {

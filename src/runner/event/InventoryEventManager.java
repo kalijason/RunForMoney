@@ -27,7 +27,7 @@ public class InventoryEventManager implements Listener {
 		if (player != null
 				&& (gameController.getHunter(player) != null || gameController
 						.getRunner(player) != null)
-				&& gameController.getGameStatus() != GameStatus.Running
+				&& gameController.getGameStatus() == GameStatus.Running
 				&& event.getSlotType() == SlotType.ARMOR) {
 			ChatUtil.sendToSender(player, ChatColor.RED + "遊戲中不可以更換裝備!!");
 			event.setCancelled(true);
