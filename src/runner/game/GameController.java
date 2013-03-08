@@ -519,7 +519,7 @@ public class GameController {
 
 		// show status each 30 secs
 		runForMoney.getServer().getScheduler()
-				.scheduleAsyncRepeatingTask(runForMoney, new Runnable() {
+				.runTaskTimerAsynchronously(runForMoney, new Runnable() {
 					@Override
 					public void run() {
 						broadCastInGame(getStatus());
