@@ -22,12 +22,12 @@ public class RunForMoney extends JavaPlugin {
 	@Override
 	public void onDisable() {
 
-		System.out.println("Disable");
+		System.out.println("Disable RunForMoney");
 	}
 
 	@Override
 	public void onEnable() {
-		System.out.println("Enable");
+		System.out.println("Enable RunForMoney");
 
 		gameController = new GameController(this);
 
